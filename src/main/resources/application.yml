@@ -1,0 +1,44 @@
+server:
+  port: ${PORT:8080}
+  shutdown: graceful
+  error:
+    include-message: always   # pass downstream login errors ("Invalid email or password") to the UI
+
+spring:
+  application:
+    name: api-gateway
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+novawealth:
+  portfolio-url: ${PORTFOLIO_SERVICE_URL:http://localhost:8082}
+  market-data-url: ${MARKET_DATA_SERVICE_URL:http://localhost:8081}
+  insights-url: ${INSIGHTS_SERVICE_URL:http://localhost:8083}
+  internal-api-key: ${INTERNAL_API_KEY:local-internal-key}
+  issuer: ${JWT_ISSUER:https://novawealth.local}
+  user-token-ttl: 60m
+  client-token-ttl: 15m
+  cors-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:5173}
+  rate-limit:
+    replenish-rate: ${RATE_LIMIT_PER_SECOND:20}
+    burst-capacity: ${RATE_LIMIT_BURST:40}
+  # OAuth2 client credentials clients. Secrets come from env (Secret Manager on GCP).
+  clients:
+    - client-id: portfolio-service
+      client-secret: ${PORTFOLIO_CLIENT_SECRET:portfolio-service-secret}
+      scopes: [market.read]
+    - client-id: back-office-batch
+      client-secret: ${BACK_OFFICE_CLIENT_SECRET:back-office-secret}
+      scopes: [market.read]
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,gateway
+  endpoint:
+    health:
+      probes:
+        enabled: true
